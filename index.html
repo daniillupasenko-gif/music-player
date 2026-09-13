@@ -1,0 +1,463 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мой музыкальный плеер</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: #121212;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.player {
+    width: 360px;
+    background: #181818;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+}
+
+.cover {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 12px;
+    object-fit: cover;
+    margin-bottom: 20px;
+}
+
+.song-name {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.artist {
+    color: #a7a7a7;
+    font-size: 15px;
+    margin-bottom: 20px;
+}
+
+.progress-container {
+    width: 100%;
+}
+
+.progress {
+    width: 100%;
+    height: 5px;
+    appearance: none;
+    background: #535353;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.progress::-webkit-slider-thumb {
+    appearance: none;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+}
+
+.time {
+    display: flex;
+    justify-content: space-between;
+    color: #a7a7a7;
+    font-size: 11px;
+    margin-top: 6px;
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    margin-top: 20px;
+}
+
+.control {
+    border: none;
+    background: none;
+    color: white;
+    cursor: pointer;
+    font-size: 25px;
+    transition: 0.2s;
+}
+
+.control:hover {
+    transform: scale(1.12);
+}
+
+.play {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: none;
+    background: white;
+    color: black;
+    font-size: 25px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.play:hover {
+    transform: scale(1.07);
+}
+
+.volume {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.volume input {
+    flex: 1;
+}
+
+.volume-slider {
+    appearance: none;
+    height: 4px;
+    background: #535353;
+    border-radius: 10px;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="player">
+
+    <img
+        class="cover"
+        id="cover"
+        src="poater.jpg"
+        alt="Обложка"
+    >
+
+    <div class="song-name" id="songName">
+        Первая песня
+    </div>
+
+    <div class="artist" id="artist">
+        Исполнитель
+    </div>
+
+    <div class="progress-container">
+
+        <input
+            type="range"
+            class="progress"
+            id="progress"
+            value="0"
+            min="0"
+            max="100"
+        >
+
+        <div class="time">
+            <span id="currentTime">0:00</span>
+            <span id="duration">0:00</span>
+        </div>
+
+    </div>
+
+    <div class="controls">
+
+        <button class="control" id="prev">
+            ⏮
+        </button>
+
+        <button class="play" id="play">
+            ▶
+        </button>
+
+        <button class="control" id="next">
+            ⏭
+        </button>
+
+    </div>
+
+    <div class="volume">
+        🔊
+
+        <input
+            type="range"
+            class="volume-slider"
+            id="volume"
+            min="0"
+            max="1"
+            step="0.01"
+            value="1"
+        >
+    </div>
+
+</div>
+
+<audio id="audio"></audio>
+
+<script>
+
+const songs = [
+
+    {
+        name: "Первая песня",
+        artist: "Мой исполнитель",
+        file: "song.mp3",
+        cover: "poster.jpg"
+    },
+
+    {
+        name: "Вторая песня",
+        artist: "Другой исполнитель",
+        file: "song2.mp3",
+        cover: "poster2.jpg"
+    },
+
+    {
+        name: "Третья песня",
+        artist: "Ещё один исполнитель",
+        file: "song3.mp3",
+        cover: "poater3.jpg"
+    }
+
+];
+
+
+let currentSong = 0;
+
+const audio = document.getElementById("audio");
+
+const playButton =
+    document.getElementById("play");
+
+const progress =
+    document.getElementById("progress");
+
+const volume =
+    document.getElementById("volume");
+
+const currentTime =
+    document.getElementById("currentTime");
+
+const duration =
+    document.getElementById("duration");
+
+const cover =
+    document.getElementById("cover");
+
+const songName =
+    document.getElementById("songName");
+
+const artist =
+    document.getElementById("artist");
+
+const prevButton =
+    document.getElementById("prev");
+
+const nextButton =
+    document.getElementById("next");
+
+
+// ЗАГРУЗКА ПЕСНИ
+
+function loadSong(index) {
+
+    currentSong = index;
+
+    const song = songs[currentSong];
+
+    audio.src = song.file;
+
+    cover.src = song.cover;
+
+    songName.textContent = song.name;
+
+    artist.textContent = song.artist;
+
+    progress.value = 0;
+
+    currentTime.textContent = "0:00";
+
+    duration.textContent = "0:00";
+
+}
+
+
+// PLAY / PAUSE
+
+playButton.addEventListener("click", () => {
+
+    if (audio.paused) {
+
+        audio.play();
+
+        playButton.textContent = "⏸";
+
+    } else {
+
+        audio.pause();
+
+        playButton.textContent = "▶";
+
+    }
+
+});
+
+
+// СЛЕДУЮЩАЯ ПЕСНЯ
+
+nextButton.addEventListener("click", () => {
+
+    currentSong++;
+
+    if (currentSong >= songs.length) {
+        currentSong = 0;
+    }
+
+    loadSong(currentSong);
+
+    audio.play();
+
+    playButton.textContent = "⏸";
+
+});
+
+
+// ПРЕДЫДУЩАЯ ПЕСНЯ
+
+prevButton.addEventListener("click", () => {
+
+    currentSong--;
+
+    if (currentSong < 0) {
+        currentSong = songs.length - 1;
+    }
+
+    loadSong(currentSong);
+
+    audio.play();
+
+    playButton.textContent = "⏸";
+
+});
+
+
+// ПРОГРЕСС
+
+audio.addEventListener("timeupdate", () => {
+
+    if (audio.duration) {
+
+        progress.value =
+            (audio.currentTime / audio.duration) * 100;
+
+        currentTime.textContent =
+            formatTime(audio.currentTime);
+
+    }
+
+});
+
+
+// ДЛИТЕЛЬНОСТЬ
+
+audio.addEventListener("loadedmetadata", () => {
+
+    duration.textContent =
+        formatTime(audio.duration);
+
+});
+
+
+// ПЕРЕМАТЫВАНИЕ
+
+progress.addEventListener("input", () => {
+
+    if (audio.duration) {
+
+        audio.currentTime =
+            (progress.value / 100) * audio.duration;
+
+    }
+
+});
+
+
+// ГРОМКОСТЬ
+
+volume.addEventListener("input", () => {
+
+    audio.volume = volume.value;
+
+});
+
+
+// ПЕСНЯ ЗАКОНЧИЛАСЬ
+
+audio.addEventListener("ended", () => {
+
+    currentSong++;
+
+    if (currentSong >= songs.length) {
+        currentSong = 0;
+    }
+
+    loadSong(currentSong);
+
+    audio.play();
+
+});
+
+
+// ВРЕМЯ
+
+function formatTime(seconds) {
+
+    if (isNaN(seconds)) {
+        return "0:00";
+    }
+
+    let minutes =
+        Math.floor(seconds / 60);
+
+    let secs =
+        Math.floor(seconds % 60);
+
+    if (secs < 10) {
+        secs = "0" + secs;
+    }
+
+    return minutes + ":" + secs;
+
+}
+
+
+// ЗАГРУЖАЕМ ПЕРВУЮ ПЕСНЮ
+
+loadSong(0);
+
+</script>
+
+</body>
+</html>
